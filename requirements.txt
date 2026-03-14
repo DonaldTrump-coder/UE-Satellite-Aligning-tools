@@ -3,3 +3,5 @@ numpy
 pyaudio
 opencv-contrib-python
 PyQt5
+PyQtWebEngine
+rasterio
