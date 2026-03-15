@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QListWidget, QLabel, QAction
+from PyQt5.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QListWidget, QLabel, QAction, QFileDialog
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtCore import QUrl
 from UI.Satellite_Label import SatelliteLabel
@@ -35,3 +35,17 @@ class Application(QMainWindow):
         option_menu = menubar.addMenu("Options")
         open_sat_action = QAction("Open Images", self)
         file_menu.addAction(open_sat_action)
+        
+        open_sat_action.triggered.connect(self.import_satellite)
+    
+    def import_satellite(self):
+        folder = QFileDialog.getExistingDirectory(
+            self,
+            "Select Satellite Images Folder",  # 对话框标题
+            "./data",                               # 默认路径
+            QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks
+        )
+        if not folder:
+            return
+        
+        self.satellite_widget.set_images(folder)
