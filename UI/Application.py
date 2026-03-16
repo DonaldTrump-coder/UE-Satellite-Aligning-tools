@@ -2,7 +2,7 @@ from PyQt6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QLis
 from UI.WebView import WebView
 from UI.Satellite_Label import SatelliteLabel
 from controltools.UAVcontrol import UAVcontroller
-from PyQt6.QtCore import QThread, QTimer
+from PyQt6.QtCore import QThread, QTimer, Qt
 from PyQt6.QtGui import QAction
 
 class Application(QMainWindow):
@@ -64,11 +64,36 @@ class Application(QMainWindow):
             self.controller.stop()
         if self.UAV_thread:
             self.UAV_thread.quit()
-            self.UAV_thread.wait()
             
         if self.satellite_widget.tile_worker:
             self.satellite_widget.tile_worker.close()
             self.satellite_widget.tile_thread.quit()
-            self.satellite_widget.tile_thread.wait()
         
         event.accept()
+        
+    def keyPressEvent(self, event):
+        if not self.controller:
+            return
+        key = event.key()
+        
+        if key == Qt.Key.Key_W:
+            self.controller.forward()
+        elif key == Qt.Key.Key_S:
+            self.controller.backward()
+        elif key == Qt.Key.Key_A:
+            self.controller.move_left()
+        elif key == Qt.Key.Key_D:
+            self.controller.move_right()
+        elif key == Qt.Key.Key_Q:
+            self.controller.turn_left()
+        elif key == Qt.Key.Key_E:
+            self.controller.turn_right()
+        elif key == Qt.Key.Key_Space:
+            self.controller.up()
+        elif key == Qt.Key.Key_Shift:
+            self.controller.down()
+            
+    def keyReleaseEvent(self, event):
+        if not self.controller:
+            return
+        self.controller.unlease()
