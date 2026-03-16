@@ -137,11 +137,10 @@ class Aligner: # v = Bx - f
         b1, b2, b3 = self.R[1,:]
         c1, c2, c3 = self.R[2,:]
         s1, s2, s3 = self.Params[0], self.Params[1], self.Params[2]
-        alpha, beta, gamma = self.Params[3], self.Params[4], self.Params[5]
         l1, l2, l3 = self.Params[6], self.Params[7], self.Params[8]
         for i in range(self.points_num):
             Xi, Yi, Zi = self.XYZ[i]
             xi, yi, zi = self.xyz[i]
             self.f[3 * i] = xi - s1 * (a1 * Xi + a2 * Yi + a3 * Zi) - l1
-            self.f[3 * i + 1] = -yi - s2 * (b1 * Xi + b2 * Yi + b3 * Zi) - l2
+            self.f[3 * i + 1] = yi - s2 * (b1 * Xi + b2 * Yi + b3 * Zi) - l2
             self.f[3 * i + 2] = zi - s3 * (c1 * Xi + c2 * Yi + c3 * Zi) - l3

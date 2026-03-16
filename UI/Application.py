@@ -4,6 +4,7 @@ from UI.Satellite_Label import SatelliteLabel
 from controltools.UAVcontrol import UAVcontroller
 from PyQt6.QtCore import QThread, QTimer, Qt
 from PyQt6.QtGui import QAction
+from Aligner.aligner_mode import AlignerMode
 
 class Application(QMainWindow):
     def __init__(self, address):
@@ -40,6 +41,8 @@ class Application(QMainWindow):
         QTimer.singleShot(0, self.start_control)
         
         self.controller = None
+        self.aligner_mode = AlignerMode.LABEL
+        self.satellite_widget.choose = True
         
     def start_control(self):
         self.UAV_thread = QThread()

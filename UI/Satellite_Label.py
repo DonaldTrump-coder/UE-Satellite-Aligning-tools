@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QLabel
 from Satellite.spatial_sql import SpatialDB
 from PyQt6.QtCore import QObject, pyqtSignal, QThread, Qt
-from PyQt6.QtGui import QImage, QPixmap
+from PyQt6.QtGui import QImage, QPixmap, QPainter, QPen
 
 class SatelliteLabel(QLabel):
     def __init__(self):
@@ -16,6 +16,10 @@ class SatelliteLabel(QLabel):
         
         self.last_pos = None
         self.dragging = False
+        self.choose = True # Labelmode: True; Applicationmode: False
+        
+        self.chosen_lon = None
+        self.chosen_lat = None
         
     def set_images(self, folder):
         if self.tile_worker:
@@ -41,7 +45,7 @@ class SatelliteLabel(QLabel):
         self.tile_worker.render_image(self.view_lon, self.view_lat, self.lon_per_pix, self.lat_per_pix, self.height(), self.width())
         
     def set_image(self, img):
-        height, width, channel = img.shape
+        height, width, _ = img.shape
         qimage = QImage(img.data, width, height, width * 3, QImage.Format.Format_RGB888)
         pixmap = QPixmap.fromImage(qimage)
         self.setPixmap(pixmap)
@@ -49,9 +53,18 @@ class SatelliteLabel(QLabel):
     def mousePressEvent(self, event):
         if not self.tile_worker:
             return
-        if event.button() == Qt.MouseButton.LeftButton:
+        if event.button() == Qt.MouseButton.RightButton:
             self.dragging = True
             self.last_pos = event.pos()
+        if event.button() == Qt.MouseButton.LeftButton and self.choose:
+            pos = event.pos()
+            x = pos.x()
+            y = pos.y()
+            dx = x - self.width() / 2
+            dy = y - self.height() / 2
+            self.chosen_lon = self.view_lon + dx * self.lon_per_pix
+            self.chosen_lat = self.view_lat - dy * self.lat_per_pix
+            self.update()
             
     def mouseMoveEvent(self, event):
         if not self.dragging:
@@ -65,7 +78,7 @@ class SatelliteLabel(QLabel):
         self.last_pos = pos
     
     def mouseReleaseEvent(self, event):
-        if event.button() == Qt.MouseButton.LeftButton:
+        if event.button() == Qt.MouseButton.RightButton:
             self.dragging = False
     
     def wheelEvent(self, event):
@@ -80,6 +93,27 @@ class SatelliteLabel(QLabel):
         self.lon_per_pix *= scale
         self.lat_per_pix *= scale
         self.render()
+    
+    def paintEvent(self, a0):
+        super().paintEvent(a0)
+        if self.chosen_lon is None or self.chosen_lat is None:
+            return
+        
+        dx = (self.chosen_lon - self.view_lon) / self.lon_per_pix
+        dy = (self.view_lat - self.chosen_lat) / self.lat_per_pix
+        x = int(self.width() / 2 + dx)
+        y = int(self.height() / 2 + dy)
+        painter = QPainter(self)
+        pen = QPen(Qt.GlobalColor.red, 2)
+        painter.setPen(pen)
+
+        size = 10
+        painter.drawLine(x - size, y, x + size, y)
+        painter.drawLine(x, y - size, x, y + size)
+        painter.end()
+        
+    def save(self):
+        pass
         
 class Tile_Worker(QObject):
     finished = pyqtSignal(object)

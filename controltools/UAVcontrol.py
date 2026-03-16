@@ -1,8 +1,7 @@
 import airsim
 from PyQt6.QtCore import pyqtSignal, QObject, QTimer
 
-class UAVcontroller(QObject):
-    image_signal = pyqtSignal(object)
+class UAVcontroller(QObject): # right-hand coordinate for Airsim
     position_signal = pyqtSignal(object)
     
     def __init__(self):
@@ -12,8 +11,6 @@ class UAVcontroller(QObject):
         self.client.enableApiControl(True)
         self.client.armDisarm(True)
         self.client.takeoffAsync().join() # takeoff the drone before controlling
-        self.client.simRunConsoleCommand("t.IdleWhenNotForeground 0")
-        self.client.simRunConsoleCommand("t.MaxFPS 120")
         self.running=True
         self.landed=False
         
@@ -51,6 +48,7 @@ class UAVcontroller(QObject):
             if self.key_e:
                 yaw_rate = 30
             yaw_mode = airsim.YawMode(is_rate=True, yaw_or_rate=yaw_rate)
+            self.get_state()
             self.client.moveByVelocityBodyFrameAsync(
                 vx,
                 vy,
@@ -82,6 +80,14 @@ class UAVcontroller(QObject):
         
     def down(self):
         self.key_shift = True
+        
+    def get_state(self):
+        state = self.client.getMultirotorState()
+        pos = state[1][0]
+        x = pos[0]
+        y = pos[1]
+        z = pos[2]
+        self.position_signal.emit((x, y, z))
     
     def unlease(self):
         self.key_w = False
