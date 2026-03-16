@@ -1,6 +1,6 @@
 # UE-Satellite-Aligning-tools
 
-conda create -n aligning python=3.9
+conda create -n aligning python=3.11
 conda activate aligning
 
 pip install -r requirements.txt

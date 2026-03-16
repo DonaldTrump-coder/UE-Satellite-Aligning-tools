@@ -2,6 +2,6 @@ msgpack-rpc-python
 numpy
 pyaudio
 opencv-contrib-python
-PyQt5
-PyQtWebEngine
 rasterio
+PyQt6-WebEngine
+PyQt6
