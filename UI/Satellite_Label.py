@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import QLabel
 from Satellite.spatial_sql import SpatialDB
 from PyQt6.QtCore import QObject, pyqtSignal, QThread, Qt
 from PyQt6.QtGui import QImage, QPixmap, QPainter, QPen
+from controltools.coordinates import GeoCoordinate
 
 class SatelliteLabel(QLabel):
     def __init__(self):
@@ -16,10 +17,12 @@ class SatelliteLabel(QLabel):
         
         self.last_pos = None
         self.dragging = False
-        self.choose = True # Labelmode: True; Applicationmode: False
         
         self.chosen_lon = None
         self.chosen_lat = None
+        self.choose = True
+        
+        self.coors = []
         
     def set_images(self, folder):
         if self.tile_worker:
@@ -96,24 +99,49 @@ class SatelliteLabel(QLabel):
     
     def paintEvent(self, a0):
         super().paintEvent(a0)
-        if self.chosen_lon is None or self.chosen_lat is None:
-            return
         
-        dx = (self.chosen_lon - self.view_lon) / self.lon_per_pix
-        dy = (self.view_lat - self.chosen_lat) / self.lat_per_pix
-        x = int(self.width() / 2 + dx)
-        y = int(self.height() / 2 + dy)
-        painter = QPainter(self)
-        pen = QPen(Qt.GlobalColor.red, 2)
-        painter.setPen(pen)
+        if self.choose:
+            if self.chosen_lon is None or self.chosen_lat is None:
+                return
+            dx = (self.chosen_lon - self.view_lon) / self.lon_per_pix
+            dy = (self.view_lat - self.chosen_lat) / self.lat_per_pix
+            x = int(self.width() / 2 + dx)
+            y = int(self.height() / 2 + dy)
+            painter = QPainter(self)
+            pen = QPen(Qt.GlobalColor.red, 2)
+            painter.setPen(pen)
 
-        size = 10
-        painter.drawLine(x - size, y, x + size, y)
-        painter.drawLine(x, y - size, x, y + size)
-        painter.end()
+            size = 10
+            painter.drawLine(x - size, y, x + size, y)
+            painter.drawLine(x, y - size, x, y + size)
+            
+            for coor in self.coors:
+                dx = (coor.lon - self.view_lon) / self.lon_per_pix
+                dy = (self.view_lat - coor.lat) / self.lat_per_pix
+                x = int(self.width() / 2 + dx)
+                y = int(self.height() / 2 + dy)
+                painter.drawLine(x - size, y, x + size, y)
+                painter.drawLine(x, y - size, x, y + size)
+            
+            painter.end()
+        else:
+            x = int(self.width() / 2)
+            y = int(self.height() / 2)
+            painter = QPainter(self)
+            pen = QPen(Qt.GlobalColor.red, 2)
+            painter.setPen(pen)
+            size = 10
+            painter.drawLine(x - size, y, x + size, y)
+            painter.drawLine(x, y - size, x, y + size)
+            painter.end()
+    
+    def render_position(self, B, L):
+        self.tile_worker.render_image(L, B, self.lon_per_pix, self.lat_per_pix, self.height(), self.width())
         
     def save(self):
-        pass
+        geocoordinate = GeoCoordinate(self.chosen_lon, self.chosen_lat)
+        self.coors.append(geocoordinate)
+        return geocoordinate
         
 class Tile_Worker(QObject):
     finished = pyqtSignal(object)

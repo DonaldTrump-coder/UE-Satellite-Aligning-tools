@@ -2,12 +2,16 @@ import airsim
 from PyQt6.QtCore import pyqtSignal, QObject, QTimer
 
 class UAVcontroller(QObject): # right-hand coordinate for Airsim
-    position_signal = pyqtSignal(object)
+    position_signal = pyqtSignal(float, float, float) # x, y, z
     
     def __init__(self):
         super().__init__()
-        self.client = airsim.MultirotorClient()
-        self.client.confirmConnection()
+        try:
+            self.client = airsim.MultirotorClient()
+            self.client.confirmConnection()
+        except:
+            self.running = False
+            return
         self.client.enableApiControl(True)
         self.client.armDisarm(True)
         self.client.takeoffAsync().join() # takeoff the drone before controlling
@@ -26,6 +30,8 @@ class UAVcontroller(QObject): # right-hand coordinate for Airsim
         self.key_shift = False
         self.key_q = False
         self.key_e = False
+        
+        self.choose = True
         
     def update_control(self):
         if self.running:
@@ -48,7 +54,6 @@ class UAVcontroller(QObject): # right-hand coordinate for Airsim
             if self.key_e:
                 yaw_rate = 30
             yaw_mode = airsim.YawMode(is_rate=True, yaw_or_rate=yaw_rate)
-            self.get_state()
             self.client.moveByVelocityBodyFrameAsync(
                 vx,
                 vy,
@@ -56,6 +61,9 @@ class UAVcontroller(QObject): # right-hand coordinate for Airsim
                 0.1,
                 yaw_mode=yaw_mode
             )
+            if self.choose is False:
+                x, y, z = self.get_state()
+                self.position_signal.emit(x, y, z)
         
     def forward(self):
         self.key_w = True
@@ -86,8 +94,8 @@ class UAVcontroller(QObject): # right-hand coordinate for Airsim
         pos = state[1][0]
         x = pos[0]
         y = pos[1]
-        z = pos[2]
-        self.position_signal.emit((x, y, z))
+        z = pos[2] / 100 # from cm to m
+        return x, y, z
     
     def unlease(self):
         self.key_w = False
@@ -100,6 +108,8 @@ class UAVcontroller(QObject): # right-hand coordinate for Airsim
         self.key_e = False
         
     def stop(self):
+        if self.running is False:
+            return
         self.running = False
         self.client.hoverAsync().join() # hover the drone before landing
         self.client.landAsync().join() # land the drone
