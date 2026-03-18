@@ -2,6 +2,7 @@
 
 ## Model
 This tool uses a 2D - 2D transformation model:
+
 $$
 \begin{bmatrix}
     s_1 & 0 \\
@@ -21,6 +22,7 @@ $$
     B \\ L
 \end{bmatrix}
 $$
+
 and solve for the parameters with least squares via SVD.
 
 ## Build
