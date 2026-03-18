@@ -13,13 +13,16 @@ $$
     r_{10} & r_{11}
 \end{bmatrix}
 \begin{bmatrix}
-    x \\ y
+    x \\
+    y
 \end{bmatrix} + 
 \begin{bmatrix}
-    t_0 \\ t_1
+    t_0 \\
+    t_1
 \end{bmatrix}= 
 \begin{bmatrix}
-    B \\ L
+    B \\
+    L
 \end{bmatrix}
 $$
 
